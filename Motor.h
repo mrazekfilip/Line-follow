@@ -58,6 +58,7 @@ double Motor::getSpeed(){
 }
 
 void Motor::setSpeed(double absoluteSpeed){
+    this->absoluteSpeed = absoluteSpeed;
     enc.readDistance();
     pid.Compute();
     sendSpeed();

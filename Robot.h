@@ -21,21 +21,23 @@ private:
     void followLine();
     void findLine();
     void barrier();
+    int i;
 public:
     Robot();
     void start();
 };
 
 Robot::Robot() :
-    motorL(6, 11, 9, 1.15), motorR(5, 10, 9, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 5, 10, 0, DIRECT){
+    motorL(6, 11, 9, 1.15), motorR(5, 10, 9, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 0, 0, 0, DIRECT){
     this->goodError = 128;
     this->timeLine = millis();
     this->timeSonic = millis();
     this->timeMotors = millis();
 
-    this->P = 5;
-    this->I = 10;
+    this->P = 0;
+    this->I = 0;
     this->D = 0;
+    this->i = 0;
     linePid.SetMode(AUTOMATIC);
 }
 
@@ -58,6 +60,7 @@ void Robot::readSensors(){
 
 void Robot::start(){
     readSensors();
+
 
     if (lineSensor.seeLine){
         followLine();
@@ -89,7 +92,7 @@ void Robot::followLine(){
         switch(keystroke){
             case 'q':
             this->P += 0.1;
-            break;
+             break;
             case 'a':
             this->P -= 0.1;
             break;
@@ -109,10 +112,7 @@ void Robot::followLine(){
         linePid.SetTunings(P, I, D);
     }
 
-
-    int i = 1000;
-
-    if (i == 1000){
+    if (i == 50){
         Serial.print("error: ");
         Serial.print(lineSensor.error);
         Serial.print(" turning: ");
@@ -139,5 +139,6 @@ void Robot::followLine(){
     } else{
         motorL.setSpeed(40 + (this->turning - 128) / 2.56);
         motorR.setSpeed(40);
+
     }
 }
