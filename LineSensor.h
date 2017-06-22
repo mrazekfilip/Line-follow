@@ -70,8 +70,7 @@ void LineSensor::readLeds(){
   this->error = 0;
   for (int i = 0; i <5; i++){
       this->error += this->leds[i] * this->weights[i];
-  }
-  this->error = -34 + (this->error + 400) / 2.6;
+  };
 }
 
 void LineSensor::printLedsValue(){

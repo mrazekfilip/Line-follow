@@ -24,6 +24,7 @@ Motor::Motor(int pinForward, int pinBackward, int pinEncoderCS, float radius) :
     this->P = 1.5;
     this->I = 14;
     this->D = 0.1;
+    pid.SetOutputLimits(-255, 255);
     pid.SetMode(AUTOMATIC);
 }
 

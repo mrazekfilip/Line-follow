@@ -29,7 +29,7 @@ public:
 
 Robot::Robot() :
     motorL(6, 11, 9, 1.15), motorR(5, 10, 9, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 0, 0, 0, DIRECT){
-    this->goodError = 128;
+    this->goodError = 0;
     this->timeLine = millis();
     this->timeSonic = millis();
     this->timeMotors = millis();
@@ -39,6 +39,7 @@ Robot::Robot() :
     this->D = 0;
     this->i = 0;
     linePid.SetMode(AUTOMATIC);
+    linePid.SetOutputLimits(-400, 400);
 }
 
 void Robot::readSensors(){
@@ -68,6 +69,7 @@ void Robot::start(){
         motorL.stop();
         motorR.stop();
     }
+
 
     // if (sonicSensor.distance < 20){
     //     Serial.println("not implemented: barrier");
@@ -133,11 +135,11 @@ void Robot::followLine(){
     }
     i++;
 
-    if(this->turning >= 128){
+    if(this->turning >= 0){
         motorL.setSpeed(40);
-        motorR.setSpeed(40 - (this->turning - 128) / 2.56);
+        motorR.setSpeed(40 - this->turning / 6.66);
     } else{
-        motorL.setSpeed(40 + (this->turning - 128) / 2.56);
+        motorL.setSpeed(40 + this->turning / 6.66);
         motorR.setSpeed(40);
 
     }
