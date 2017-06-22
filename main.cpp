@@ -1,17 +1,15 @@
 #include <Arduino.h>
 
-#include"Motor.h"
+#include "Robot.h"
 
 void setup() {
     Serial.begin(57600);
     Serial.println("start");
 
-    Motor motorL(6, 11, 9, 1.15);
+    Robot lineFollow;
 
     while(true) {
-        motorL.setSpeed(35);
-
-        delay(5);
+        lineFollow.start();
     }
 }
 
