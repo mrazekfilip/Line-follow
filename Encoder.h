@@ -66,5 +66,4 @@ void Encoder::printDistance(){
   Serial.print(this->distance);
   Serial.print(" Speed: ");
   Serial.print(this->speed);
-  Serial.print("\n");
 }

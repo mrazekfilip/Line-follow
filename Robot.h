@@ -28,7 +28,7 @@ public:
 };
 
 Robot::Robot() :
-    motorL(6, 11, 9, 1.15), motorR(5, 10, 9, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 0, 0, 0, DIRECT){
+    motorL(6, 11, 9, 1.15), motorR(5, 10, 8, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 0, 0, 0, DIRECT){
     this->goodError = 0;
     this->timeLine = millis();
     this->timeSonic = millis();
@@ -40,6 +40,8 @@ Robot::Robot() :
     this->i = 0;
     linePid.SetMode(AUTOMATIC);
     linePid.SetOutputLimits(-400, 400);
+    motorL.pid.SetOutputLimits(-255, 255);
+    motorR.pid.SetOutputLimits(-255, 255);
 }
 
 void Robot::readSensors(){
@@ -115,32 +117,30 @@ void Robot::followLine(){
     }
 
     if (i == 50){
-        Serial.print("error: ");
-        Serial.print(lineSensor.error);
-        Serial.print(" turning: ");
-        Serial.print(this->turning);
-        Serial.print(" motors:");
-        Serial.print(motorL.absoluteSpeed);
-        Serial.print(" ");
-        Serial.print(motorR.absoluteSpeed);
-        Serial.print(" PID: ");
-        Serial.print(this->P);
-        Serial.print(" ");
-        Serial.print(this->I);
-        Serial.print(" ");
-        Serial.print(this->D);
-        Serial.print(" ");
-        Serial.print("\n");
+        // Serial.print("error: ");
+        // Serial.print(lineSensor.error);
+        // Serial.print(" turning: ");
+        // Serial.print(this->turning);
+        // Serial.print(" motors:");
+        // Serial.print(motorL.absoluteSpeed);
+        // Serial.print(" ");
+        // Serial.print(motorR.absoluteSpeed);
+        // Serial.print(" PID: ");
+        // Serial.print(this->P);
+        // Serial.print(" ");
+        // Serial.print(this->I);
+        // Serial.print(" ");
+        // Serial.print(this->D);
+        // Serial.print(" ");
+        // Serial.print("\n");
+        motorR.print();
         i = 0;
     }
     i++;
 
-    if(this->turning >= 0){
-        motorL.setSpeed(40);
-        motorR.setSpeed(40 - this->turning / 6.66);
-    } else{
-        motorL.setSpeed(40 + this->turning / 6.66);
-        motorR.setSpeed(40);
+    //motorL.setSpeed(20 + this->turning / 20);
+    //motorR.setSpeed(20 - this->turning / 20);
 
-    }
+    motorL.setSpeed(20);
+    motorR.setSpeed(-20);
 }

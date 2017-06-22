@@ -15,16 +15,17 @@ public:
     double getAbsoluteSpeed();
     double getSpeed();
     void stop();
+    void print();
 };
 
 Motor::Motor(int pinForward, int pinBackward, int pinEncoderCS, float radius) :
-        pinMotorF(pinForward), pinMotorB(pinBackward), enc(pinEncoderCS, radius), pid(&enc.speed, &speed, &absoluteSpeed, 1.5, 18, 0.1, DIRECT) {
+        pinMotorF(pinForward), pinMotorB(pinBackward), enc(pinEncoderCS, radius), pid(&enc.speed, &speed, &absoluteSpeed, 1.6, 14, 0.05, DIRECT) {
     this->absoluteSpeed = 0;
     this->speed = 0;
     this->P = 1.5;
     this->I = 14;
     this->D = 0.1;
-    pid.SetOutputLimits(-255, 255);
+    //pid.SetOutputLimits(-255, 255);
     pid.SetMode(AUTOMATIC);
 }
 
@@ -63,4 +64,16 @@ void Motor::setSpeed(double absoluteSpeed){
     enc.readDistance();
     pid.Compute();
     sendSpeed();
+}
+
+void Motor::print(){
+    Serial.print("Radius: ");
+    Serial.print(this->enc.radius);
+    Serial.print(" Distance: ");
+    Serial.print(this->enc.distance);
+    Serial.print(" Speed: ");
+    Serial.print(this->enc.speed);
+    Serial.print(" send speed: ");
+    Serial.print(this->speed);
+    Serial.print("\n");
 }
