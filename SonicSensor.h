@@ -13,7 +13,7 @@ public:
 SonicSensor::SonicSensor(){
   pinMode(SonicECHO, INPUT);
   pinMode(SonicTRIG, OUTPUT);
-  this->distance = 0;
+  this->distance = 50;
 }
 
 void SonicSensor::readDistance(){

@@ -28,24 +28,24 @@ public:
 };
 
 Robot::Robot() :
-    motorL(6, 11, 9, 1.15), motorR(5, 10, 8, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 0, 0, 0, DIRECT){
+    motorL(6, 11, 9, 1.15), motorR(5, 10, 8, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 0.880, 0.075, 0.19, DIRECT){
     this->goodError = 0;
     this->timeLine = millis();
     this->timeSonic = millis();
     this->timeMotors = millis();
 
-    this->P = 0;
-    this->I = 0;
-    this->D = 0;
+    this->P = 0.88;
+    this->I = 0.08;
+    this->D = 0.02;
     this->i = 0;
     linePid.SetMode(AUTOMATIC);
-    linePid.SetOutputLimits(-400, 400);
+    linePid.SetOutputLimits(-300, 300);
     motorL.pid.SetOutputLimits(-255, 255);
     motorR.pid.SetOutputLimits(-255, 255);
 }
 
 void Robot::readSensors(){
-    if (millis() - this->timeLine > 3){
+    if (millis() - this->timeLine > 4){
         this->timeLine = millis();
         lineSensor.readLeds();
     }
@@ -54,7 +54,7 @@ void Robot::readSensors(){
         sonicSensor.readDistance();
     }
 
-    if (millis() - this->timeMotors > 3){
+    if (millis() - this->timeMotors > 15){
         this->timeMotors = millis();
         motorL.enc.readDistance();
         motorR.enc.readDistance();
@@ -71,7 +71,6 @@ void Robot::start(){
         motorL.stop();
         motorR.stop();
     }
-
 
     // if (sonicSensor.distance < 20){
     //     Serial.println("not implemented: barrier");
@@ -107,40 +106,104 @@ void Robot::followLine(){
             this->I -= 0.1;
             break;
             case 'e':
-            this->D += 0.1;
+            this->D += 0.01;
             break;
             case 'd':
-            this->D -= 0.1;
+            this->D -= 0.01;
+            break;
+            case 'r':
+            this->P += 0.01;
+            break;
+            case 'f':
+            this->P -= 0.01;
+            break;
+            case 't':
+            this->I += 0.001;
+            break;
+            case 'g':
+            this->I -= 0.001;
+            break;
+            case 'z':
+            this->D += 0.001;
+            break;
+            case 'h':
+            this->D -= 0.001;
             break;
         }
         linePid.SetTunings(P, I, D);
     }
 
     if (i == 50){
-        // Serial.print("error: ");
-        // Serial.print(lineSensor.error);
-        // Serial.print(" turning: ");
-        // Serial.print(this->turning);
-        // Serial.print(" motors:");
-        // Serial.print(motorL.absoluteSpeed);
-        // Serial.print(" ");
-        // Serial.print(motorR.absoluteSpeed);
-        // Serial.print(" PID: ");
-        // Serial.print(this->P);
-        // Serial.print(" ");
-        // Serial.print(this->I);
-        // Serial.print(" ");
-        // Serial.print(this->D);
-        // Serial.print(" ");
-        // Serial.print("\n");
-        motorR.print();
+        Serial.print("error: ");
+        Serial.print(lineSensor.error);
+        Serial.print(" turning: ");
+        Serial.print(" ");
+        Serial.print(this->turning);
+        Serial.print(" ");
+        Serial.print(" motors:");
+        Serial.print(motorL.absoluteSpeed);
+        Serial.print(" ");
+        Serial.print(motorR.absoluteSpeed);
+        Serial.print(" PID: ");
+        Serial.print(this->P, 3);
+        Serial.print(" ");
+        Serial.print(this->I, 3);
+        Serial.print(" ");
+        Serial.print(this->D, 3);
+        Serial.print(" ");
+        Serial.print("\n");
         i = 0;
     }
     i++;
 
-    //motorL.setSpeed(20 + this->turning / 20);
-    //motorR.setSpeed(20 - this->turning / 20);
+    motorL.setSpeed(18 + this->turning / 13.63);
+    motorR.setSpeed(-18 + this->turning / 13.63);
+}
 
-    motorL.setSpeed(20);
-    motorR.setSpeed(-20);
+void Robot::barrier(){
+    //rotate left
+    delay(20);
+    double startDistance = motorL.enc.distanceCm;
+    while(abs(startDistance - motorL.enc.distanceCm) < 9){
+        readSensors();
+        Serial.print("left: ");
+        Serial.println(startDistance - motorL.enc.distanceCm);
+        motorL.setSpeed(-20);
+        motorR.setSpeed(-20);
+    }
+    //forward 15 cm
+    delay(20);
+    startDistance = motorL.enc.distanceCm;
+    while(abs(startDistance - motorL.enc.distanceCm) < 15){
+        readSensors();
+        Serial.print("forward: ");
+        Serial.println(startDistance - motorL.enc.distanceCm);
+        motorL.setSpeed(30);
+        motorR.setSpeed(-30);
+    }
+    //rotate right
+    delay(20);
+    startDistance = motorL.enc.distanceCm;
+    while(abs(motorL.enc.distanceCm - startDistance) < 9){
+        readSensors();
+        Serial.print("right: ");
+        Serial.println(motorL.enc.distanceCm - startDistance);
+        motorL.setSpeed(20);
+        motorR.setSpeed(20);
+    }
+}
+
+void Robot::findLine(){
+    unsigned long startTime = millis();
+    while(!lineSensor.seeLine){
+        readSensors();
+        Serial.println(sin(sqrt(millis() - startTime)/4));
+        if (sin(sqrt(millis() - startTime)/4) >= 0){
+            motorL.setSpeed(10);
+            motorR.setSpeed(-30);
+        } else{
+            motorL.setSpeed(30);
+            motorR.setSpeed(-10);
+        }
+    }
 }

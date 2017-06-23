@@ -19,12 +19,12 @@ public:
 };
 
 Motor::Motor(int pinForward, int pinBackward, int pinEncoderCS, float radius) :
-        pinMotorF(pinForward), pinMotorB(pinBackward), enc(pinEncoderCS, radius), pid(&enc.speed, &speed, &absoluteSpeed, 1.6, 14, 0.05, DIRECT) {
+        pinMotorF(pinForward), pinMotorB(pinBackward), enc(pinEncoderCS, radius), pid(&enc.speed, &speed, &absoluteSpeed, 3.36, 0.83, 0.02, DIRECT) {
     this->absoluteSpeed = 0;
     this->speed = 0;
-    this->P = 1.5;
-    this->I = 14;
-    this->D = 0.1;
+    this->P = 3.36;
+    this->I = 0.062;
+    this->D = 0.015;
     //pid.SetOutputLimits(-255, 255);
     pid.SetMode(AUTOMATIC);
 }
@@ -61,6 +61,33 @@ double Motor::getSpeed(){
 
 void Motor::setSpeed(double absoluteSpeed){
     this->absoluteSpeed = absoluteSpeed;
+
+    // char keystroke = ' ';
+    // if (Serial.available()>0){
+    //     keystroke = Serial.read();
+    //
+    //     switch(keystroke){
+    //         case 'q':
+    //         this->P += 0.1;
+    //          break;
+    //         case 'a':
+    //         this->P -= 0.1;
+    //         break;
+    //         case 'w':
+    //         this->I += 0.001;
+    //         break;
+    //         case 's':
+    //         this->I -= 0.001;
+    //         break;
+    //         case 'e':
+    //         this->D += 0.001;
+    //         break;
+    //         case 'd':
+    //         this->D -= 0.001;
+    //         break;
+    //     }
+    //     pid.SetTunings(P, I, D);
+    // }
     enc.readDistance();
     pid.Compute();
     sendSpeed();
