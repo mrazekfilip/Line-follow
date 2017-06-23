@@ -21,7 +21,6 @@ private:
     void followLine();
     void findLine();
     void barrier();
-    int i;
 public:
     Robot();
     void start();
@@ -37,7 +36,6 @@ Robot::Robot() :
     this->P = 0.88;
     this->I = 0.075;
     this->D = 0.19;
-    this->i = 0;
     linePid.SetMode(AUTOMATIC);
     linePid.SetOutputLimits(-300, 300);
     motorL.pid.SetOutputLimits(-255, 255);
@@ -65,11 +63,10 @@ void Robot::start(){
     readSensors();
 
 
-    if (lineSensor.seeLine){
-        followLine();
+    if (!lineSensor.seeLine){
+        findLine();
     } else{
-        motorL.stop();
-        motorR.stop();
+        followLine();
     }
 
     // if (sonicSensor.distance < 20){
@@ -133,6 +130,7 @@ void Robot::followLine(){
         linePid.SetTunings(P, I, D);
     }
 
+    static int i = 0;
     if (i == 50){
         Serial.print("error: ");
         Serial.print(lineSensor.error);
@@ -194,10 +192,12 @@ void Robot::barrier(){
 }
 
 void Robot::findLine(){
+    motorL.stop();
+    motorR.stop();
+    delay(100);
     unsigned long startTime = millis();
     while(!lineSensor.seeLine){
         readSensors();
-        Serial.println(sin(sqrt(millis() - startTime)/4));
         if (sin(sqrt(millis() - startTime)/4) >= 0){
             motorL.setSpeed(10);
             motorR.setSpeed(-30);
@@ -206,4 +206,7 @@ void Robot::findLine(){
             motorR.setSpeed(-10);
         }
     }
+    motorL.stop();
+    motorR.stop();
+    delay(100);
 }
