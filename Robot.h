@@ -35,8 +35,8 @@ Robot::Robot() :
     this->timeMotors = millis();
 
     this->P = 0.88;
-    this->I = 0.08;
-    this->D = 0.02;
+    this->I = 0.075;
+    this->D = 0.19;
     this->i = 0;
     linePid.SetMode(AUTOMATIC);
     linePid.SetOutputLimits(-300, 300);
