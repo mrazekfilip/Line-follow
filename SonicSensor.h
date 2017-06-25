@@ -1,3 +1,5 @@
+#pragma once
+
 #define SonicECHO 2
 #define SonicTRIG 3
 

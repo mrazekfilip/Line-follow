@@ -1,3 +1,5 @@
+#pragma once
+
 #define LEDs 7
 
 class LineSensor{

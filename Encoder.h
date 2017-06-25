@@ -1,3 +1,5 @@
+#pragma once
+
 #include <AS5040.h>
 
 #define EncoderDO 4

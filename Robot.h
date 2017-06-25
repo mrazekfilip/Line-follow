@@ -1,3 +1,5 @@
+#pragma once
+
 #include<PID_v1.h>
 #include"Motor.h"
 #include"LineSensor.h"
@@ -27,17 +29,18 @@ public:
 };
 
 Robot::Robot() :
-    motorL(6, 11, 9, 1.15), motorR(5, 10, 8, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 0.880, 0.075, 0.19, DIRECT){
+    motorL(6, 11, 9, 1.15), motorR(5, 10, 8, 1.15), lineSensor(), sonicSensor(), linePid(&lineSensor.error, &turning, &goodError, 1, 0.07, 0.018, DIRECT) {
+    //0.880, 0.075, 0.019
     this->goodError = 0;
     this->timeLine = millis();
     this->timeSonic = millis();
     this->timeMotors = millis();
 
-    this->P = 0.88;
-    this->I = 0.075;
+    this->P = 1;
+    this->I = 0.6;
     this->D = 0.19;
     linePid.SetMode(AUTOMATIC);
-    linePid.SetOutputLimits(-300, 300);
+    linePid.SetOutputLimits(-400, 400);
     motorL.pid.SetOutputLimits(-255, 255);
     motorR.pid.SetOutputLimits(-255, 255);
 }
@@ -47,12 +50,12 @@ void Robot::readSensors(){
         this->timeLine = millis();
         lineSensor.readLeds();
     }
-    if (millis() - this->timeSonic > 100){
-        this->timeSonic = millis();
-        sonicSensor.readDistance();
-    }
+    // if (millis() - this->timeSonic > 100){
+    //     this->timeSonic = millis();
+    //     sonicSensor.readDistance();
+    // }
 
-    if (millis() - this->timeMotors > 15){
+    if (millis() - this->timeMotors > 10){
         this->timeMotors = millis();
         motorL.enc.readDistance();
         motorR.enc.readDistance();
@@ -62,11 +65,10 @@ void Robot::readSensors(){
 void Robot::start(){
     readSensors();
 
-
-    if (!lineSensor.seeLine){
-        findLine();
-    } else{
+    if (lineSensor.seeLine){
         followLine();
+    } else {
+        findLine();
     }
 
     // if (sonicSensor.distance < 20){
@@ -84,7 +86,6 @@ void Robot::start(){
 void Robot::followLine(){
     linePid.Compute();
 
-
     char keystroke = ' ';
     if (Serial.available()>0){
         keystroke = Serial.read();
@@ -92,7 +93,7 @@ void Robot::followLine(){
         switch(keystroke){
             case 'q':
             this->P += 0.1;
-             break;
+            break;
             case 'a':
             this->P -= 0.1;
             break;
@@ -131,17 +132,12 @@ void Robot::followLine(){
     }
 
     static int i = 0;
-    if (i == 50){
+    if (i == 30){
         Serial.print("error: ");
         Serial.print(lineSensor.error);
         Serial.print(" turning: ");
         Serial.print(" ");
         Serial.print(this->turning);
-        Serial.print(" ");
-        Serial.print(" motors:");
-        Serial.print(motorL.absoluteSpeed);
-        Serial.print(" ");
-        Serial.print(motorR.absoluteSpeed);
         Serial.print(" PID: ");
         Serial.print(this->P, 3);
         Serial.print(" ");
@@ -154,59 +150,161 @@ void Robot::followLine(){
     }
     i++;
 
-    motorL.setSpeed(18 + this->turning / 13.63);
-    motorR.setSpeed(-18 + this->turning / 13.63);
+    motorL.setSpeed(18 + this->turning / 18.19);
+    motorR.setSpeed(-18 + this->turning / 18.19);
 }
 
 void Robot::barrier(){
-    //rotate left
-    delay(20);
-    double startDistance = motorL.enc.distanceCm;
-    while(abs(startDistance - motorL.enc.distanceCm) < 9){
-        readSensors();
-        Serial.print("left: ");
-        Serial.println(startDistance - motorL.enc.distanceCm);
-        motorL.setSpeed(-20);
-        motorR.setSpeed(-20);
-    }
-    //forward 15 cm
-    delay(20);
-    startDistance = motorL.enc.distanceCm;
-    while(abs(startDistance - motorL.enc.distanceCm) < 15){
-        readSensors();
-        Serial.print("forward: ");
-        Serial.println(startDistance - motorL.enc.distanceCm);
-        motorL.setSpeed(30);
-        motorR.setSpeed(-30);
-    }
-    //rotate right
-    delay(20);
-    startDistance = motorL.enc.distanceCm;
-    while(abs(motorL.enc.distanceCm - startDistance) < 9){
-        readSensors();
-        Serial.print("right: ");
-        Serial.println(motorL.enc.distanceCm - startDistance);
-        motorL.setSpeed(20);
-        motorR.setSpeed(20);
-    }
+    motorL.stop();
+    motorR.stop();
+    delay(200);
 }
 
 void Robot::findLine(){
     motorL.stop();
     motorR.stop();
-    delay(100);
+
+    delay(200);
+
     unsigned long startTime = millis();
-    while(!lineSensor.seeLine){
+
+    //right
+    startTime = millis();
+    while(millis() - startTime < 220){
         readSensors();
-        if (sin(sqrt(millis() - startTime)/4) >= 0){
-            motorL.setSpeed(10);
-            motorR.setSpeed(-30);
-        } else{
-            motorL.setSpeed(30);
-            motorR.setSpeed(-10);
-        }
+        motorL.setSpeed(30);
+        motorR.setSpeed(30);
+    }
+
+    motorL.stop();
+    motorR.stop();
+
+    delay(200);
+
+    //forward
+    startTime = millis();
+    while(millis() - startTime < 800 and !lineSensor.seeLine){
+        readSensors();
+        motorL.setSpeed(33);
+        motorR.setSpeed(-30);
     }
     motorL.stop();
     motorR.stop();
-    delay(100);
+
+    while(!lineSensor.seeLine){
+        //left
+        startTime = millis();
+        while(millis() - startTime < 350 and !lineSensor.seeLine){
+            readSensors();
+            motorL.setSpeed(-30);
+            motorR.setSpeed(-30);
+        }
+
+        motorL.stop();
+        motorR.stop();
+
+        delay(200);
+
+        //forward
+        startTime = millis();
+        while(millis() - startTime < 1200 and !lineSensor.seeLine){
+            readSensors();
+            motorL.setSpeed(33);
+            motorR.setSpeed(-30);
+        }
+        motorL.stop();
+        motorR.stop();
+
+        delay(200);
+
+        //right
+        startTime = millis();
+        while(millis() - startTime < 650 and !lineSensor.seeLine){
+            readSensors();
+            motorL.setSpeed(30);
+            motorR.setSpeed(30);
+        }
+
+        motorL.stop();
+        motorR.stop();
+
+        delay(200);
+
+        //forward
+        startTime = millis();
+        while(millis() - startTime < 1200 and !lineSensor.seeLine){
+            readSensors();
+            motorL.setSpeed(33);
+            motorR.setSpeed(-30);
+        }
+        motorL.stop();
+        motorR.stop();
+
+        delay(200);
+    }
+
+
+
+
 }
+
+
+// motorL.stop();
+// motorR.stop();
+// unsigned int startTime = millis();
+//
+//
+// while (millis() - startTime < 1000 and !lineSensor.seeLine){
+//     readSensors();
+//     motorL.setSpeed(30);
+//     motorR.setSpeed(-25);
+//
+//     Serial.print(startTime);
+//     Serial.print(" ");
+//     Serial.print(millis());
+//     Serial.print("\n");
+// }
+// while (millis() - startTime < 3000 and !lineSensor.seeLine){
+//     readSensors();
+//     motorL.setSpeed(25);
+//     motorR.setSpeed(-30);
+//
+//     Serial.print(startTime);
+//     Serial.print(" ");
+//     Serial.print(millis());
+//     Serial.print("\n");
+// }
+// while (millis() - startTime < 7000 and !lineSensor.seeLine){
+//     readSensors();
+//     motorL.setSpeed(30);
+//     motorR.setSpeed(-25);
+//
+//     Serial.print(startTime);
+//     Serial.print(" ");
+//     Serial.print(millis());
+//     Serial.print("\n");
+// }
+// while (millis() - startTime < 15000 and !lineSensor.seeLine){
+//     readSensors();
+//     motorL.setSpeed(25);
+//     motorR.setSpeed(-30);
+//
+//     Serial.print(startTime);
+//     Serial.print(" ");
+//     Serial.print(millis());
+//     Serial.print("\n");
+// }
+// while (millis() - startTime < 31000 and !lineSensor.seeLine){
+//     readSensors();
+//     motorL.setSpeed(30);
+//     motorR.setSpeed(-25);
+//
+//     Serial.print(startTime);
+//     Serial.print(" ");
+//     Serial.print(millis());
+//     Serial.print("\n");
+// }
+//
+// motorL.stop();
+// motorR.stop();
+// delay(200);
