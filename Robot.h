@@ -50,10 +50,10 @@ void Robot::readSensors(){
         this->timeLine = millis();
         lineSensor.readLeds();
     }
-    // if (millis() - this->timeSonic > 100){
-    //     this->timeSonic = millis();
-    //     sonicSensor.readDistance();
-    // }
+    if (millis() - this->timeSonic > 500){
+        this->timeSonic = millis();
+        sonicSensor.readDistance();
+    }
 
     if (millis() - this->timeMotors > 10){
         this->timeMotors = millis();
@@ -65,22 +65,20 @@ void Robot::readSensors(){
 void Robot::start(){
     readSensors();
 
-    if (lineSensor.seeLine){
+    // if (lineSensor.seeLine){
+    //     followLine();
+    // } else {
+    //     findLine();
+    // }
+
+    if (sonicSensor.distance < 15){
+        barrier();
+    } else if (lineSensor.seeLine){
         followLine();
-    } else {
+    }
+    else{
         findLine();
     }
-
-    // if (sonicSensor.distance < 20){
-    //     Serial.println("not implemented: barrier");
-    //     //barrier();
-    // } else if (!lineSensor.seeLine){
-    //     Serial.println("not implemented: findLine");
-    //     //findLine();
-    // }
-    // else{
-    //     followLine();
-    // }
 }
 
 void Robot::followLine(){
@@ -158,6 +156,68 @@ void Robot::barrier(){
     motorL.stop();
     motorR.stop();
     delay(200);
+
+    unsigned long startTime = millis();
+
+    //right
+    startTime = millis();
+    while(millis() - startTime < 500){
+        readSensors();
+        motorL.setSpeed(30);
+        motorR.setSpeed(30);
+    }
+
+    motorL.stop();
+    motorR.stop();
+    delay(200);
+
+    //forward
+    startTime = millis();
+    while(millis() - startTime < 800){
+        readSensors();
+        motorL.setSpeed(33);
+        motorR.setSpeed(-30);
+    }
+    motorL.stop();
+    motorR.stop();
+    delay(200);
+
+    //left
+    startTime = millis();
+    while(millis() - startTime < 350){
+        readSensors();
+        motorL.setSpeed(-30);
+        motorR.setSpeed(-30);
+    }
+
+    motorL.stop();
+    motorR.stop();
+    delay(200);
+
+    //forward
+    startTime = millis();
+    while(millis() - startTime < 1500){
+        readSensors();
+        motorL.setSpeed(33);
+        motorR.setSpeed(-30);
+    }
+    motorL.stop();
+    motorR.stop();
+    delay(200);
+
+    //left
+    startTime = millis();
+    while(millis() - startTime < 350){
+        readSensors();
+        motorL.setSpeed(-30);
+        motorR.setSpeed(-30);
+    }
+
+    motorL.stop();
+    motorR.stop();
+    delay(200);
+
+    findLine();
 }
 
 void Robot::findLine(){
